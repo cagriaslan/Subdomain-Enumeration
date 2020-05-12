@@ -4,11 +4,6 @@ import subprocess
 
 
 def auto_recon(target_domain):
-    """For theHarvester: The file 'api-keys.yaml' must exist under the directory where the command executed"""
-
-    harvester = subprocess.run(["theHarvester", "-d", target_domain, "-b", "all", "-f", "output.xml"], check=True)
-    print(harvester)
-
     if os.path.exists('Sublist3r'):
         path = os.path.abspath('Sublist3r')
         sublister = subprocess.run([path + "./sublist3r.py", "-d", target_domain, "-o", "sublist3r" + target_domain.split(".")[0] + ".txt"])
@@ -33,7 +28,44 @@ def auto_recon(target_domain):
     subprocess.run(["recon-cli", "-m", "reporting/list", "-c", "\"options set FILENAME recon-ng.txt\"", "-c" "options set TABLE hosts", "-x"])
 
 
+def theharvester(target_domain):
+    """For theHarvester: The file 'api-keys.yaml' must exist under the directory where the command executed"""
+    harvester = subprocess.run(["theHarvester", "-d", target_domain, "-b", "all", "-f", "theharvester_" +
+                                target_domain.split(".")[0] + ".xml"], check=True)
+
+    # Returns all subdomains found by theHarvester as a list and saves it to a file
+    return the_harvester_parser("theharvester_" + target_domain.split(".")[0] + ".xml", "theharvester_" +
+                                target_domain.split(".")[0] + "_parsed.txt")
+
+
+def the_harvester_parser(input_file, output_file):
+    """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a
+    list"""
+    import xml.etree.ElementTree as ET
+    tree = ET.parse(input_file)
+    root = tree.getroot()
+    lines_seen = set()
+
+    for item in root.iter('theHarvester'):
+        for label in item.iter("host"):
+            if label.text is None:
+                continue
+            if "." in label.text:
+                lines_seen.add(label.text)
+        for label in item.iter("hostname"):
+            if '.' in label.text:
+                lines_seen.add(label.text)
+
+    with open(output_file, "w") as fp:
+        for each in lines_seen:
+            if '\n' not in each:
+                lines_seen.add(each)
+                fp.write(each + "\n")
+    return list(lines_seen)
+
+
 def ns_lookup(subdomain_list):
+    """Expects a list of subdomains (each on a new line) and returns subdomain: IP dict"""
     ip_dom_dict = {}
     with open(subdomain_list, "r") as file:
         for subdomain in file:
@@ -50,6 +82,7 @@ def ns_lookup(subdomain_list):
                 print("An error occured for " + subdomain.split("\n", 1)[0])
 
     print(ip_dom_dict)
+    return ip_dom_dict
 
 
 ns_lookup("reconng.txt")
