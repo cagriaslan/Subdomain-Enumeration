@@ -22,7 +22,7 @@ def main(target, result_path):
     # Formatting the results and make them unique.
     merge_lists(target)
     # Writing results into a csv file.
-    write_csv(result_path)
+    write_csv(target, result_path)
 
     # Optional: Keeping files that returned from tools as an output and created while command execution.
     if args["keep"]:
@@ -134,16 +134,16 @@ def merge_lists(target_domain):
     with open("sublist3r_" + target_domain.split(".")[0] + ".txt", "r") as file3:
         for subdomain in file3:
             all_lines += subdomain + "\n"
-    with open("merged_unique_subdomain_list.txt", "w") as wp:
+    with open(target_domain.split(".")[0] + "_subdomain_list.txt", "w") as wp:
         # Eliminating the duplicate lines.
         unique_list = "\n".join(list(OrderedDict.fromkeys(all_lines.split("\n"))))
         for sub_dom in unique_list.splitlines():
             wp.write("{}\n".format(sub_dom))
 
 
-def write_csv(result_path):
+def write_csv(target, result_path):
     """It writes the dictionary returned from ns_lookup() into a csv file with format."""
-    dict_to_write = ns_lookup("merged_unique_subdomain_list.txt")
+    dict_to_write = ns_lookup(target.split(".")[0] + "_subdomain_list.txt")
     with open(result_path, "w") as wr:
         for key in dict_to_write:
             wr.write("{},{}\n".format(key, dict_to_write[key]))
