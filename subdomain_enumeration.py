@@ -8,6 +8,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--domain", required=True, help="Target domain to search.")
 ap.add_argument("-o", "--output", required=True, help="Output file path to write results into a CSV file.")
 ap.add_argument("-k", "--keep", action='store_true', help="Keep files that obtained while the program execution.")
+ap.add_argument("-i", "--install", action='store_false', help="Install all modules of Recon-Ng.")
 args = vars(ap.parse_args())
 """END argparse for terminal execution"""
 
@@ -23,6 +24,13 @@ def main(target, result_path):
     merge_lists(target)
     # Writing results into a csv file.
     write_csv(target, result_path)
+
+    # Install all Recon-Ng modules if install option is given. (Recommended in the first run of the program.
+    # Reason: There is no pre-installed modules in the default of Recon-ng)
+    if args["install"]:
+        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+    else:
+        pass
 
     # Optional: Keeping files that returned from tools as an output and created while command execution.
     if args["keep"]:
@@ -52,14 +60,10 @@ def sublist3r(target_domain):
 
 def recon_ng(target_domain):
     """For Recon-ng Automatization: It uses two modules of Recon-ng for subdomain scan and save results into a file"""
-    # Inserting domain name into recon-ng database
-    subprocess.run(["recon-cli", "-C", "\"db insert domains\"" + target_domain])
-    # Check the domain list
-    subprocess.run(["recon-cli", "-C", "\"show domains\""])
     # Executing the hackertarget module for the target domain
-    subprocess.run(["recon-cli", "-m", "hackertarget", "-x"])
+    subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options set SOURCE " + target_domain, "-x"])
     # Executing the brute_hosts module for the target domain
-    subprocess.run(["recon-cli", "-m", "brute_hosts", "-x"])
+    subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options set SOURCE " + target_domain, "-x"])
     # Load the reporting module, setting the file name and selecting hosts table from results of recon-ng,
     # then execute the module
     subprocess.run(["sudo", "recon-cli", "-m", "reporting/list", "-c", "options set FILENAME " + os.getcwd() +
