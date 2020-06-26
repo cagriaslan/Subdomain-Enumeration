@@ -17,6 +17,12 @@ def main(target, result_path):
     """Scan operations"""
     sublist3r(target)
     the_harvester(target)
+    # Install all Recon-Ng modules if install option is given. (Recommended in the first run of the program.
+    # Reason: There is no pre-installed modules in the default of Recon-ng)
+    if args["install"]:
+        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+    else:
+        pass
     recon_ng(target)
     """End of scan operations"""
 
@@ -24,13 +30,6 @@ def main(target, result_path):
     merge_lists(target)
     # Writing results into a csv file.
     write_csv(target, result_path)
-
-    # Install all Recon-Ng modules if install option is given. (Recommended in the first run of the program.
-    # Reason: There is no pre-installed modules in the default of Recon-ng)
-    if args["install"]:
-        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
-    else:
-        pass
 
     # Optional: Keeping files that returned from tools as an output and created while command execution.
     if args["keep"]:
@@ -47,7 +46,7 @@ def sublist3r(target_domain):
     """For Sublist3r Automatization: It scan results for target domain and save them into a file"""
     if os.path.exists('Sublist3r'):
         path = os.path.abspath('Sublist3r')
-        sublister = subprocess.run([path + "/./sublist3r.py", "-d", target_domain, "-o", "sublist3r_" +
+        sublister = subprocess.run(["python3", path + "/./sublist3r.py", "-d", target_domain, "-o", "sublist3r_" +
                                     target_domain.split(".")[0] + ".txt"])
         print(sublister)
     else:
@@ -83,8 +82,9 @@ def the_harvester(target_domain):
 def the_harvester_parser(input_file, output_file):
     """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a
     list"""
-    import xml.etree.ElementTree as ET
-    tree = ET.parse(input_file)
+    from lxml import etree
+    parser = etree.XMLParser(recover=True, encoding="UTF-8")
+    tree = etree.parse(input_file, parser=parser)
     root = tree.getroot()
     lines_seen = set()
 
