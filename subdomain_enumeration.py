@@ -15,19 +15,19 @@ args = vars(ap.parse_args())
 
 def main(target, result_path):
     """Scan operations"""
-    sublist3r(target)
-    the_harvester(target)
+    # sublist3r(target)
+    # the_harvester(target)
     # Install all Recon-Ng modules if install option is given. (Recommended in the first run of the program.
     # Reason: There is no pre-installed modules in the default of Recon-ng)
-    if args["install"]:
-        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
-    else:
-        pass
-    recon_ng(target)
+    # if args["install"]:
+    #     subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+    # else:
+    #     pass
+    # recon_ng(target)
     """End of scan operations"""
 
     # Formatting the results and make them unique.
-    merge_lists(target)
+    # merge_lists(target)
     # Writing results into a csv file.
     write_csv(target, result_path)
 
@@ -39,7 +39,7 @@ def main(target, result_path):
         subprocess.run(["rm", "theharvester_" + target.split(".")[0] + ".xml"])
         subprocess.run(["rm", "theharvester_" + target.split(".")[0] + "_parsed.txt"])
         subprocess.run(["rm", "sublist3r_" + target.split(".")[0] + ".txt"])
-        subprocess.run(["sudo", "rm", "recon-ng_" + target.split(".")[0] + ".txt"])
+        # subprocess.run(["sudo", "rm", "recon-ng_" + target.split(".")[0] + ".txt"])
 
 
 def sublist3r(target_domain):
@@ -112,16 +112,11 @@ def ns_lookup(subdomain_list):
     with open(subdomain_list, "r") as file:
         for subdomain in file:
             try:
-                process = subprocess.run(["nslookup", subdomain.split("\n", 1)[0]], check=True, stdout=subprocess.PIPE,
+                process = subprocess.run(["nslookup", subdomain.strip()], check=True, stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE, universal_newlines=True)
                 output = process.stdout
-                for idx, row in enumerate(output.splitlines()):
-                    if idx == 4:
-                        dom_name = row.split(":")[1]
-                    if idx == 5:
-                        ip_add = row.split(":")[1]
-                        ip_dom_dict[dom_name.split("\t")[1]] = ip_add.split()[0]
-            except:
+                ip_dom_dict[output.split("\n")[5].split(":")[1].strip()] = output.split("\n")[6].split(":")[1].strip()
+            except Exception as e:
                 print("An error occurred for " + subdomain.split("\n", 1)[0])
     return ip_dom_dict
 
@@ -132,9 +127,9 @@ def merge_lists(target_domain):
     with open("theharvester_" + target_domain.split(".")[0] + "_parsed.txt", "r") as file1:
         for subdomain in file1:
             all_lines += subdomain + "\n"
-    with open("recon-ng_" + target_domain.split(".")[0] + ".txt", "r") as file2:
-        for subdomain in file2:
-            all_lines += subdomain + "\n"
+    # with open("recon-ng_" + target_domain.split(".")[0] + ".txt", "r") as file2:
+    #     for subdomain in file2:
+    #         all_lines += subdomain + "\n"
     with open("sublist3r_" + target_domain.split(".")[0] + ".txt", "r") as file3:
         for subdomain in file3:
             all_lines += subdomain + "\n"
@@ -155,5 +150,4 @@ def write_csv(target, result_path):
 
 if __name__ == '__main__':
     main(args["domain"], args["output"])
-
 
