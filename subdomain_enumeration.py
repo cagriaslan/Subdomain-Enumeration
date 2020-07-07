@@ -15,8 +15,8 @@ args = vars(ap.parse_args())
 
 def main(target, result_path):
     """Scan operations"""
-    # sublist3r(target)
-    # the_harvester(target)
+    sublist3r(target)
+    the_harvester(target)
     # Install all Recon-Ng modules if install option is given. (Recommended in the first run of the program.
     # Reason: There is no pre-installed modules in the default of Recon-ng)
     # if args["install"]:
@@ -27,7 +27,7 @@ def main(target, result_path):
     """End of scan operations"""
 
     # Formatting the results and make them unique.
-    # merge_lists(target)
+    merge_lists(target)
     # Writing results into a csv file.
     write_csv(target, result_path)
 
