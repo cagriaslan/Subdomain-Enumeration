@@ -71,7 +71,7 @@ def recon_ng(target_domain):
 
 def the_harvester(target_domain):
     """For theHarvester: The file 'api-keys.yaml' must exist under the directory where the command executed"""
-    harvester = subprocess.run(["python3", "theHarvester", "-d", target_domain, "-b", "all", "-f", "theharvester_" +
+    harvester = subprocess.run(["python3", "theHarvester.py", "-d", target_domain, "-b", "all", "-f", "theharvester_" +
                                 target_domain.split(".")[0] + ".xml"], check=True)
     print(harvester)
     # Returns all subdomains found by theHarvester as a list and saves it to a file
