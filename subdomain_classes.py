@@ -3,6 +3,7 @@ import subprocess
 import argparse
 from collections import OrderedDict
 from lxml import etree
+import nslookup
 
 '''
 """Argparse for terminal execution"""
@@ -15,57 +16,79 @@ args = vars(ap.parse_args())
 """END argparse for terminal execution"""
 '''
 
+
 class sublist3r:
-    
+
     def __init__(self, target_domain):
         self.target_domain = target_domain
-    
-    
+
     def sublist3rFunc(self):
-    
         """For Sublist3r Automatization: It scan results for target domain and save them into a file"""
-
         output_list = []
-
         if os.path.exists('Sublist3r'):
-            path = os.path.abspath('Sublist3r') 
-        
+            path = os.path.abspath('Sublist3r')
+
             subprocess.run(["python3", path + "/./sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
-                                    self.target_domain.split(".")[0] + ".txt"])
-        
+                            self.target_domain.split(".")[0] + ".txt"])
+
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
                     output_list.append(line)
-            
+
             return output_list
-         
+
         else:
             subprocess.run(["git", "clone", "https://github.com/aboul3la/Sublist3r.git"])
             path = os.path.abspath('Sublist3r')
             subprocess.run([path + "/./sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
-                                        self.target_domain.split(".")[0] + ".txt"])
-            
+                            self.target_domain.split(".")[0] + ".txt"])
+
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
                     output_list.append(line)
-            
+
             return output_list
 
 
+class recon_ng:
+
+    def __init__(self, target_domain):
+        self.target_domain = target_domain
+
+    def recon_ngFunc(self):
+        output_list = []
+
+        """For Recon-ng Automatization: It uses two modules of Recon-ng for subdomain scan and save results into a file"""
+        # Executing the hackertarget module for the target domain
+        subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options set SOURCE " + self.target_domain, "-x"])
+        # Executing the brute_hosts module for the target domain
+        subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options set SOURCE " + self.target_domain, "-x"])
+        # Load the reporting module, setting the file name and selecting hosts table from results of recon-ng,
+        # then execute the module
+        subprocess.run(["sudo", "recon-cli", "-m", "reporting/list", "-c", "options set FILENAME " + os.getcwd() +
+                        "/recon-ng_" + self.target_domain.split(".")[0] + ".txt", "-c", "options set TABLE hosts",
+                        "-x"])
+
+        with open(os.getcwd() + "/recon-ng_" + self.target_domain.split(".")[0] + ".txt") as txt:
+            for line in txt:
+                output_list.append(line)
+
+        return output_list
+
+
 class the_harvester:
-    
+
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
     def the_harvester_parser(self, input_file, output_file):
         """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a list"""
 
-
         parser = etree.XMLParser(recover=True, encoding="UTF-8")
         tree = etree.parse(input_file, parser=parser)
         root = tree.getroot()
         lines_seen = set()
-        
+
         for item in root.iter('theHarvester'):
             for label in item.iter("host"):
                 if label.text is None:
@@ -81,48 +104,59 @@ class the_harvester:
                 if '\n' not in each:
                     lines_seen.add(each)
                     fp.write(each)
-        return list(lines_seen)  
-
+        return list(lines_seen)
 
     def the_harvesterFunc(self):
 
-
         if os.path.exists('theHarvester'):
-            os.chdir("theHarvester/")   
-        
-            subprocess.run(["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" + 
-                                self.target_domain.split(".")[0] ], check=True)
+            os.chdir("theHarvester/")
 
+            subprocess.run(
+                ["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" +
+                 self.target_domain.split(".")[0]], check=True)
 
-            parsed =  self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml", "theharvester_" +
-                                self.target_domain.split(".")[0] + "_parsed.txt")
-            
+            parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
+                                               "theharvester_" +
+                                               self.target_domain.split(".")[0] + "_parsed.txt")
 
             return parsed
-            
-
 
         else:
             os.system("git clone https://github.com/laramies/theHarvester.git")
-            os.chdir("theHarvester/")  
+            os.chdir("theHarvester/")
 
             # Before the first run, satisfying all the requisites
             os.system("python3 -m pip install -r requirements.txt")
-            
-            subprocess.run(["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" + 
-                                self.target_domain.split(".")[0] ], check=True)
-         
-            parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml", "theharvester_" +
-                                self.target_domain.split(".")[0] + "_parsed.txt")
+
+            subprocess.run(
+                ["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" +
+                 self.target_domain.split(".")[0]], check=True)
+
+            parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
+                                               "theharvester_" +
+                                               self.target_domain.split(".")[0] + "_parsed.txt")
 
             return parsed
-            
 
 
-if __name__ == '__main__': 
+# def write_csv(lst, result_path):
 
-    #domain = args["domain"]
-    domain = 'tesla.com'
+
+def merge_lists(target_domain, lst1, lst2, lst3):
+    with open(target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
+        joined = lst_sublistl3r + lst_the_Harvester + lst_recon_ng
+        joined = [each.strip() for each in joined]
+        joined = set(joined)
+
+        for sub_dom in joined:
+            wp.write("{}\n".format(sub_dom))
+
+        return sub_dom
+
+
+if __name__ == '__main__':
+    # domain = args["domain"]
+    domain = 'gib.gov.tr'
 
     sublist3r_object = sublist3r(domain)
     lst_sublistl3r = sublist3r_object.sublist3rFunc()
@@ -130,12 +164,30 @@ if __name__ == '__main__':
     the_harvester_object = the_harvester(domain)
     lst_the_Harvester = the_harvester_object.the_harvesterFunc()
 
+    # if args["install"]:
+    #     subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+    # else:
+    #     pass
+
+    recon_ng_object = recon_ng(domain)
+    lst_recon_ng = recon_ng_object.recon_ngFunc()
 
     print("---------joined list-------------")
 
-    joined = lst_sublistl3r+lst_the_Harvester
-    joined = [each.strip() for each in joined]
-    joined = set(joined)
+    sub_domain_list = merge_lists(domain, lst_sublistl3r, lst_the_Harvester, lst_recon_ng)
 
-    for i in joined:
-        print(i)
+    # args["output"]
+    output = "/last_output.txt"
+
+    # for i in joined:
+    #     print(i)
+
+    # Before deletion, check for the files' destination    
+    # if args["keep"]:
+    #     pass
+    # else:
+    #     subprocess.run(["rm", "merged_unique_subdomain_list.txt"])
+    #     subprocess.run(["rm", "theharvester_" + target.split(".")[0] + ".xml"])
+    #     subprocess.run(["rm", "theharvester_" + target.split(".")[0] + "_parsed.txt"])
+    #     subprocess.run(["rm", "sublist3r_" + target.split(".")[0] + ".txt"])
+    #     subprocess.run(["sudo", "rm", "recon-ng_" + target.split(".")[0] + ".txt"])
