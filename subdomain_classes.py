@@ -1,8 +1,6 @@
 import os
 import subprocess
 import argparse
-from collections import OrderedDict
-from impacket.smbserver import outputToJohnFormat
 from lxml import etree
 import socket
 
@@ -17,7 +15,6 @@ args = vars(ap.parse_args())
 
 
 class sublist3r:
-
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
@@ -26,14 +23,11 @@ class sublist3r:
         output_list = []
         if os.path.exists('Sublist3r'):
             path = os.path.abspath('Sublist3r')
-
             subprocess.run(["python3", path + "/./sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
                             self.target_domain.split(".")[0] + ".txt"])
-
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
                     output_list.append(line)
-
             return output_list
 
         else:
@@ -41,22 +35,18 @@ class sublist3r:
             path = os.path.abspath('Sublist3r')
             subprocess.run([path + "/./sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
                             self.target_domain.split(".")[0] + ".txt"])
-
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
                     output_list.append(line)
-
             return output_list
 
 
 class recon_ng:
-
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
     def recon_ngFunc(self):
         output_list = []
-
         """For Recon-ng Automatization: It uses two modules of Recon-ng for subdomain scan and save results into a file"""
         # Executing the hackertarget module for the target domain
         subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options set SOURCE " + self.target_domain, "-x"])
@@ -67,22 +57,18 @@ class recon_ng:
         subprocess.run(["sudo", "recon-cli", "-m", "reporting/list", "-c", "options set FILENAME " + os.getcwd() +
                         "/recon-ng_" + self.target_domain.split(".")[0] + ".txt", "-c", "options set TABLE hosts",
                         "-x"])
-
         with open(os.getcwd() + "/recon-ng_" + self.target_domain.split(".")[0] + ".txt") as txt:
             for line in txt:
                 output_list.append(line)
-
         return output_list
 
 
 class the_harvester:
-
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
     def the_harvester_parser(self, input_file, output_file):
         """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a list"""
-
         parser = etree.XMLParser(recover=True, encoding="UTF-8")
         tree = etree.parse(input_file, parser=parser)
         root = tree.getroot()
@@ -106,10 +92,8 @@ class the_harvester:
         return list(lines_seen)
 
     def the_harvesterFunc(self):
-
         if os.path.exists('theHarvester'):
             os.chdir("theHarvester/")
-
             subprocess.run(
                 ["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" +
                  self.target_domain.split(".")[0]], check=True)
@@ -117,7 +101,6 @@ class the_harvester:
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
                                                "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
             return parsed
-
         else:
             os.system("git clone https://github.com/laramies/theHarvester.git")
             os.chdir("theHarvester/")
@@ -128,73 +111,69 @@ class the_harvester:
             subprocess.run(
                 ["python3", "./theHarvester.py", "-d", self.target_domain, "-b", "all", "-f", "theharvester_" +
                  self.target_domain.split(".")[0]], check=True)
-
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
                                                "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
-
             return parsed
 
 
-class outputting:
-
+class MergeFinalize:
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
-    def merge_lists(self, target_domain):
+        # Create objects
+        self.sublist3r_object = sublist3r(domain)
+        self.the_harvester_object = the_harvester(domain)
+        self.recon_ng_object = recon_ng(domain)
 
-        with open(os.path.dirname(__file__) + target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
-            joined = lst_sublistl3r + lst_the_Harvester + lst_recon_ng
+        # Create lists
+        self.lst_recon_ng = self.recon_ng_object.recon_ngFunc()
+        self.lst_sublistl3r = self.sublist3r_object.sublist3rFunc()
+        self.lst_the_Harvester = self.the_harvester_object.the_harvesterFunc()
+        self.lst_sublistl3r, self.lst_the_Harvester, self.lst_recon_ng = [], [], []
+
+    def merge_lists(self):
+        with open(os.path.dirname(__file__) + self.target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
+            joined = self.lst_sublistl3r + self.lst_the_Harvester + self.lst_recon_ng
             joined = [each.strip() for each in joined]
             joined = set(joined)
-
             for sub_dom in joined:
                 wp.write("{}\n".format(sub_dom))
             return joined
 
-    def domain_ip_dict(self, subdomain_list):
-
+    def domain_ip_dict(self, sub_list):
         keys = ['domain', 'ip']
         dictionary = {key: None for key in keys}
-
-        for domain in subdomain_list:
+        for domain in sub_list:
             try:
                 ip = socket.gethostbyname(domain.strip())
                 dictionary.update({str(domain): ip})
             except:
                 dictionary.update({str(domain): "not found"})
-
         for x in dictionary.keys():
             print(x, " : ", dictionary[x])
         return dictionary
 
     def write_csv(self, dictionary, result_path):
-
         with open(result_path + self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
             for key in dictionary.keys():
                 print(key, " : ", dictionary[key], file=wr)
+
+    def combiner(self):
+        if args["install"]:
+            subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+        else:
+            pass
+
+        subdomain_list = self.merge_lists()
+        domain_ip_dict = self.domain_ip_dict(subdomain_list)
+        self.write_csv(domain_ip_dict, args["output"])
 
 
 if __name__ == '__main__':
     domain = args["domain"]
 
-    sublist3r_object = sublist3r(domain)
-    lst_sublistl3r = sublist3r_object.sublist3rFunc()
-
-    the_harvester_object = the_harvester(domain)
-    lst_the_Harvester = the_harvester_object.the_harvesterFunc()
-
-    if args["install"]:
-        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
-    else:
-        pass
-
-    recon_ng_object = recon_ng(domain)
-    lst_recon_ng = recon_ng_object.recon_ngFunc()
-
-    outputting_object = outputting(domain)
-    subdomain_list = outputting_object.merge_lists(domain)
-    domain_ip_dict = outputting_object.domain_ip_dict(subdomain_list)
-    outputting_object.write_csv(domain_ip_dict, args["output"])
+    merger = MergeFinalize(domain)
+    merger.combiner()
 
     # Before deletion, check for the files' destination
     if args["keep"]:
