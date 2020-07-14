@@ -66,7 +66,7 @@ def recon_ng(target_domain):
     # Load the reporting module, setting the file name and selecting hosts table from results of recon-ng,
     # then execute the module
     subprocess.run(["sudo", "recon-cli", "-m", "reporting/list", "-c", "options set FILENAME " + os.getcwd() +
-                    "/recon-ng_" + target_domain.split(".")[0] + ".txt", "-c" "options set TABLE hosts", "-x"])
+                    "/recon-ng_" + target_domain.split(".")[0] + ".txt", "-c", "options set TABLE hosts", "-x"])
 
 
 def the_harvester(target_domain):
@@ -77,7 +77,6 @@ def the_harvester(target_domain):
     # Returns all subdomains found by theHarvester as a list and saves it to a file
     return the_harvester_parser("theharvester_" + target_domain.split(".")[0] + ".xml", "theharvester_" +
                                 target_domain.split(".")[0] + "_parsed.txt")
-
 
 def the_harvester_parser(input_file, output_file):
     """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a
@@ -120,7 +119,6 @@ def ns_lookup(subdomain_list):
                 print("An error occurred for " + subdomain.split("\n", 1)[0])
     return ip_dom_dict
 
-
 def merge_lists(target_domain):
     """It takes all output files which are obtained from tools and merge them in one file without duplicates"""
     all_lines = ''
@@ -139,7 +137,6 @@ def merge_lists(target_domain):
         for sub_dom in unique_list.splitlines():
             wp.write("{}\n".format(sub_dom))
 
-
 def write_csv(target, result_path):
     """It writes the dictionary returned from ns_lookup() into a csv file with format."""
     dict_to_write = ns_lookup(target.split(".")[0] + "_subdomain_list.txt")
@@ -150,4 +147,3 @@ def write_csv(target, result_path):
 
 if __name__ == '__main__':
     main(args["domain"], args["output"])
-
