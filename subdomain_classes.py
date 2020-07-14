@@ -6,7 +6,6 @@ from impacket.smbserver import outputToJohnFormat
 from lxml import etree
 import socket
 
-'''
 """Argparse for terminal execution"""
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--domain", required=True, help="Target domain to search.")
@@ -15,7 +14,6 @@ ap.add_argument("-k", "--keep", action='store_true', help="Keep files that obtai
 ap.add_argument("-i", "--install", action='store_false', help="Install all modules of Recon-Ng.")
 args = vars(ap.parse_args())
 """END argparse for terminal execution"""
-'''
 
 
 class sublist3r:
@@ -117,9 +115,7 @@ class the_harvester:
                  self.target_domain.split(".")[0]], check=True)
 
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
-                                               "theharvester_" +
-                                               self.target_domain.split(".")[0] + "_parsed.txt")
-
+                                               "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
             return parsed
 
         else:
@@ -134,8 +130,7 @@ class the_harvester:
                  self.target_domain.split(".")[0]], check=True)
 
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
-                                               "theharvester_" +
-                                               self.target_domain.split(".")[0] + "_parsed.txt")
+                                               "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
 
             return parsed
 
@@ -145,10 +140,9 @@ class outputting:
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
-    def merge_lists(self, target_domain, lst1, lst2, lst3):
-        with open(target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
-            lst1, lst2, lst3 = lst_sublistl3r, lst_the_Harvester, lst_recon_ng
+    def merge_lists(self, target_domain):
 
+        with open(os.path.dirname(__file__) + target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
             joined = lst_sublistl3r + lst_the_Harvester + lst_recon_ng
             joined = [each.strip() for each in joined]
             joined = set(joined)
@@ -158,6 +152,7 @@ class outputting:
             return joined
 
     def domain_ip_dict(self, subdomain_list):
+
         keys = ['domain', 'ip']
         dictionary = {key: None for key in keys}
 
@@ -170,19 +165,17 @@ class outputting:
 
         for x in dictionary.keys():
             print(x, " : ", dictionary[x])
-
         return dictionary
 
     def write_csv(self, dictionary, result_path):
 
-        with open(self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
+        with open(result_path + self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
             for key in dictionary.keys():
                 print(key, " : ", dictionary[key], file=wr)
 
 
 if __name__ == '__main__':
-    # domain = args["domain"]
-    domain = 'gib.gov.tr'
+    domain = args["domain"]
 
     sublist3r_object = sublist3r(domain)
     lst_sublistl3r = sublist3r_object.sublist3rFunc()
@@ -190,41 +183,26 @@ if __name__ == '__main__':
     the_harvester_object = the_harvester(domain)
     lst_the_Harvester = the_harvester_object.the_harvesterFunc()
 
-    # if args["install"]:
-    #     subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
-    # else:
-    #     pass
+    if args["install"]:
+        subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+    else:
+        pass
 
     recon_ng_object = recon_ng(domain)
     lst_recon_ng = recon_ng_object.recon_ngFunc()
 
-    print("---------joined list-------------")
-
     outputting_object = outputting(domain)
-    subdomain_list = outputting_object.merge_lists(domain, lst_sublistl3r, lst_the_Harvester, lst_recon_ng)
-    dict = outputting_object.domain_ip_dict(subdomain_list)
+    subdomain_list = outputting_object.merge_lists(domain)
+    domain_ip_dict = outputting_object.domain_ip_dict(subdomain_list)
+    outputting_object.write_csv(domain_ip_dict, args["output"])
 
-    for i in subdomain_list:
-        print(i)
-
-    for x in dict.keys():
-        print(x, "=>", dict[x])
-
-    result_path = os.getcwd()
-    outputting_object.write_csv(dict, result_path)
-
-    # args["output"]
-    output = "/last_output.txt"
-
-    # for i in joined:
-    #     print(i)
-
-    # Before deletion, check for the files' destination    
-    # if args["keep"]:
-    #     pass
-    # else:
-    #     subprocess.run(["rm", "merged_unique_subdomain_list.txt"])
-    #     subprocess.run(["rm", "theharvester_" + target.split(".")[0] + ".xml"])
-    #     subprocess.run(["rm", "theharvester_" + target.split(".")[0] + "_parsed.txt"])
-    #     subprocess.run(["rm", "sublist3r_" + target.split(".")[0] + ".txt"])
-    #     subprocess.run(["sudo", "rm", "recon-ng_" + target.split(".")[0] + ".txt"])
+    # Before deletion, check for the files' destination
+    if args["keep"]:
+        pass
+    else:
+        subprocess.run(["rm", domain.split(".")[0] + "_joined_list.txt"])
+        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + ".xml"])
+        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + ".html"])
+        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + "_parsed.txt"])
+        subprocess.run(["rm", os.path.dirname(os.getcwd()) + "/sublist3r_" + domain.split(".")[0] + ".txt"])
+        subprocess.run(["sudo", "rm", "recon-ng_" + domain.split(".")[0] + ".txt"])
