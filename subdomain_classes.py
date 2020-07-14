@@ -120,16 +120,17 @@ class MergeFinalize:
     def __init__(self, target_domain, output_file):
         self.target_domain = target_domain
         self.output_file = output_file
+        self.subdomain_list = []
+
         # Create objects
-        self.sublist3r_object = sublist3r(domain)
-        self.the_harvester_object = the_harvester(domain)
-        self.recon_ng_object = recon_ng(domain)
+        self.sublist3r_object = sublist3r(self.target_domain)
+        self.the_harvester_object = the_harvester(self.target_domain)
+        self.recon_ng_object = recon_ng(self.target_domain)
 
         # Create lists
         self.lst_recon_ng = self.recon_ng_object.recon_ngFunc()
         self.lst_sublistl3r = self.sublist3r_object.sublist3rFunc()
         self.lst_the_Harvester = self.the_harvester_object.the_harvesterFunc()
-        self.lst_sublistl3r, self.lst_the_Harvester, self.lst_recon_ng = [], [], []
 
     def merge_lists(self):
         with open(os.path.dirname(__file__) + self.target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
@@ -138,12 +139,13 @@ class MergeFinalize:
             joined = set(joined)
             for sub_dom in joined:
                 wp.write("{}\n".format(sub_dom))
-            return joined
+            # return joined
+            self.subdomain_list = joined
 
-    def domain_ip_dict(self, sub_list):
+    def domain_ip_dict(self):
         keys = ['domain', 'ip']
         dictionary = {key: None for key in keys}
-        for domain in sub_list:
+        for domain in self.subdomain_list:
             try:
                 ip = socket.gethostbyname(domain.strip())
                 dictionary.update({str(domain): ip})
@@ -163,8 +165,8 @@ class MergeFinalize:
             subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
         else:
             pass
-        subdomain_list = self.merge_lists()
-        domain_ip_dict = self.domain_ip_dict(subdomain_list)
+        self.merge_lists()
+        domain_ip_dict = self.domain_ip_dict()
         self.write_csv(domain_ip_dict, self.output_file)
 
 
