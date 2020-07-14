@@ -177,7 +177,6 @@ class outputting:
 
         with open(self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
             for key in dictionary.keys():
-                # wr.write("{},{}\n".format(key, dictionary[key]))
                 print(key, " : ", dictionary[key], file=wr)
 
 
