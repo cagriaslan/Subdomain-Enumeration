@@ -117,9 +117,9 @@ class the_harvester:
 
 
 class MergeFinalize:
-    def __init__(self, target_domain):
+    def __init__(self, target_domain, output_file):
         self.target_domain = target_domain
-
+        self.output_file = output_file
         # Create objects
         self.sublist3r_object = sublist3r(domain)
         self.the_harvester_object = the_harvester(domain)
@@ -163,16 +163,15 @@ class MergeFinalize:
             subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
         else:
             pass
-
         subdomain_list = self.merge_lists()
         domain_ip_dict = self.domain_ip_dict(subdomain_list)
-        self.write_csv(domain_ip_dict, args["output"])
+        self.write_csv(domain_ip_dict, self.output_file)
 
 
 if __name__ == '__main__':
     domain = args["domain"]
-
-    merger = MergeFinalize(domain)
+    output = args["output"]
+    merger = MergeFinalize(domain, output)
     merger.combiner()
 
     # Before deletion, check for the files' destination
