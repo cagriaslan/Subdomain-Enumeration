@@ -2,8 +2,9 @@ import os
 import subprocess
 import argparse
 from collections import OrderedDict
+from impacket.smbserver import outputToJohnFormat
 from lxml import etree
-import nslookup
+import socket
 
 '''
 """Argparse for terminal execution"""
@@ -139,19 +140,45 @@ class the_harvester:
             return parsed
 
 
-# def write_csv(lst, result_path):
+class outputting:
 
+    def __init__(self, target_domain):
+        self.target_domain = target_domain
 
-def merge_lists(target_domain, lst1, lst2, lst3):
-    with open(target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
-        joined = lst_sublistl3r + lst_the_Harvester + lst_recon_ng
-        joined = [each.strip() for each in joined]
-        joined = set(joined)
+    def merge_lists(self, target_domain, lst1, lst2, lst3):
+        with open(target_domain.split(".")[0] + "_joined_list.txt", "w") as wp:
+            lst1, lst2, lst3 = lst_sublistl3r, lst_the_Harvester, lst_recon_ng
 
-        for sub_dom in joined:
-            wp.write("{}\n".format(sub_dom))
+            joined = lst_sublistl3r + lst_the_Harvester + lst_recon_ng
+            joined = [each.strip() for each in joined]
+            joined = set(joined)
 
-        return sub_dom
+            for sub_dom in joined:
+                wp.write("{}\n".format(sub_dom))
+            return joined
+
+    def domain_ip_dict(self, subdomain_list):
+        keys = ['domain', 'ip']
+        dictionary = {key: None for key in keys}
+
+        for domain in subdomain_list:
+            try:
+                ip = socket.gethostbyname(domain.strip())
+                dictionary.update({str(domain): ip})
+            except:
+                dictionary.update({str(domain): "not found"})
+
+        for x in dictionary.keys():
+            print(x, " : ", dictionary[x])
+
+        return dictionary
+
+    def write_csv(self, dictionary, result_path):
+
+        with open(self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
+            for key in dictionary.keys():
+                # wr.write("{},{}\n".format(key, dictionary[key]))
+                print(key, " : ", dictionary[key], file=wr)
 
 
 if __name__ == '__main__':
@@ -174,7 +201,18 @@ if __name__ == '__main__':
 
     print("---------joined list-------------")
 
-    sub_domain_list = merge_lists(domain, lst_sublistl3r, lst_the_Harvester, lst_recon_ng)
+    outputting_object = outputting(domain)
+    subdomain_list = outputting_object.merge_lists(domain, lst_sublistl3r, lst_the_Harvester, lst_recon_ng)
+    dict = outputting_object.domain_ip_dict(subdomain_list)
+
+    for i in subdomain_list:
+        print(i)
+
+    for x in dict.keys():
+        print(x, "=>", dict[x])
+
+    result_path = os.getcwd()
+    outputting_object.write_csv(dict, result_path)
 
     # args["output"]
     output = "/last_output.txt"
