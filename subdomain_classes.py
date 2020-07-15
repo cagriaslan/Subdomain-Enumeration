@@ -47,19 +47,46 @@ class recon_ng:
 
     def recon_ngFunc(self):
         output_list = []
-        """For Recon-ng Automatization: It uses two modules of Recon-ng for subdomain scan and save results into a file"""
+        """For Recon-ng Automatization: It uses two modules of Recon-ng for 
+        subdomain scan and save results into a file """
+
+        ''' !!!
+        # create workspace named domain 
+        #subprocess.run(["recon-cli", "-w", self.target_domain.split(".")[0]])
+        '''
+
+        if args["install"]:
+            subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+        else:
+            pass
+
         # Executing the hackertarget module for the target domain
         subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options set SOURCE " + self.target_domain, "-x"])
+        subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options unset SOURCE " + self.target_domain, "-x"])
+
         # Executing the brute_hosts module for the target domain
         subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options set SOURCE " + self.target_domain, "-x"])
+        subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options unset SOURCE " + self.target_domain, "-x"])
+
         # Load the reporting module, setting the file name and selecting hosts table from results of recon-ng,
         # then execute the module
-        subprocess.run(["sudo", "recon-cli", "-m", "reporting/list", "-c", "options set FILENAME " + os.getcwd() +
-                        "/recon-ng_" + self.target_domain.split(".")[0] + ".txt", "-c", "options set TABLE hosts",
-                        "-x"])
+        subprocess.run(["sudo", "recon-cli", "-m", "reporting/list",
+                        "-c", "options set FILENAME " + os.getcwd() + "/recon-ng_" + self.target_domain.split(".")[
+                            0] + ".txt",
+                        "-c", "options set TABLE hosts", "-x"])
+
+        # db delete hosts 0 - 1000
+        subprocess.run(["recon-cli", "-C", "db delete hosts 0 - 1000 ", "-x"])
+
+        '''
+        # remove workspace named domain !!!
+        # subprocess.run(["recon-cli", "-C", "\"workspaces remove " + self.target_domain.split(".")[0]+"\""])
+        '''
+
         with open(os.getcwd() + "/recon-ng_" + self.target_domain.split(".")[0] + ".txt") as txt:
             for line in txt:
                 output_list.append(line)
+
         return output_list
 
 
@@ -161,10 +188,7 @@ class MergeFinalize:
                 print(key, " : ", dictionary[key], file=wr)
 
     def combiner(self):
-        if args["install"]:
-            subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
-        else:
-            pass
+
         self.merge_lists()
         domain_ip_dict = self.domain_ip_dict()
         self.write_csv(domain_ip_dict, self.output_file)
@@ -185,4 +209,4 @@ if __name__ == '__main__':
         subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + ".html"])
         subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + "_parsed.txt"])
         subprocess.run(["rm", os.path.dirname(os.getcwd()) + "/sublist3r_" + domain.split(".")[0] + ".txt"])
-        subprocess.run(["sudo", "rm", "recon-ng_" + domain.split(".")[0] + ".txt"])
+        subprocess.run(["sudo", "rm", os.path.dirname(os.getcwd()) + "/recon-ng_" + domain.split(".")[0] + ".txt"])
