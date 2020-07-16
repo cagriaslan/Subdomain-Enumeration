@@ -3,7 +3,6 @@ import subprocess
 import argparse
 from lxml import etree
 import socket
-from pathlib import  Path
 
 """Argparse for terminal execution"""
 ap = argparse.ArgumentParser()
@@ -14,6 +13,7 @@ ap.add_argument("-i", "--install", action='store_true', help="Install all module
 args = vars(ap.parse_args())
 """END argparse for terminal execution"""
 
+
 class sublist3r:
     def __init__(self, target_domain):
         self.target_domain = target_domain
@@ -21,9 +21,10 @@ class sublist3r:
     def sublist3rFunc(self):
         """For Sublist3r Automatization: It scan results for target domain and save them into a file"""
         output_list = []
+
         if os.path.exists('Sublist3r'):
             path = os.path.abspath('Sublist3r')
-            subprocess.run(["python3", path+"/sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
+            subprocess.run(["python3", path + "/sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
                             self.target_domain.split(".")[0] + ".txt"])
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
@@ -33,7 +34,7 @@ class sublist3r:
         else:
             subprocess.run(["git", "clone", "https://github.com/aboul3la/Sublist3r.git"])
             path = os.path.abspath('Sublist3r')
-            subprocess.run(["python3", path +"/sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
+            subprocess.run(["python3", path + "/sublist3r.py", "-d", self.target_domain, "-o", "sublist3r_" +
                             self.target_domain.split(".")[0] + ".txt"])
             with open("sublist3r_" + self.target_domain.split(".")[0] + ".txt") as txt:
                 for line in txt:
@@ -65,8 +66,8 @@ class recon_ng:
         subprocess.run(["recon-cli", "-m", "hackertarget", "-c", "options unset SOURCE " + self.target_domain, "-x"])
 
         # Executing the brute_hosts module for the target domain
-        # subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options set SOURCE " + self.target_domain, "-x"])
-        # subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options unset SOURCE " + self.target_domain, "-x"])
+        subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options set SOURCE " + self.target_domain, "-x"])
+        subprocess.run(["recon-cli", "-m", "brute_hosts", "-c", "options unset SOURCE " + self.target_domain, "-x"])
 
         # Load the reporting module, setting the file name and selecting hosts table from results of recon-ng,
         # then execute the module
@@ -77,7 +78,7 @@ class recon_ng:
                         "-c", "options set COLUMN host",
                         "-x"])
 
-        # db delete hosts 0 - 1000 / Deletes domains from hosts table
+        # db delete hosts 0 - 1000 / Deletes domains from hosts table with range
         subprocess.run(["recon-cli", "-C", "db delete hosts 0 - 1000 ", "-x"])
 
         '''
@@ -90,6 +91,7 @@ class recon_ng:
                 output_list.append(line)
 
         return output_list
+
 
 class the_harvester:
     def __init__(self, target_domain):
@@ -145,6 +147,7 @@ class the_harvester:
                                                "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
             return parsed
 
+
 class MergeFinalize:
     def __init__(self, target_domain, output_file):
         self.target_domain = target_domain
@@ -180,16 +183,19 @@ class MergeFinalize:
             except:
                 dictionary.update({str(domain): "not found"})
         for x in dictionary.keys():
-            print(x,",", dictionary[x])
+            print(x, ",", dictionary[x])
         return dictionary
 
     def write_csv(self, dictionary, result_path):
-        # with open(result_path + self.target_domain.split(".")[0] + "_output_list.txt", "w") as wr:
+
+        """ Last working directory was theHarvester. Go to parent directory
+            with '..'. So program is able to write output.csv to main directory. """
 
         os.chdir('..')
+
         with open(result_path + ".csv", "w") as wr:
             for key in dictionary.keys():
-                print(key,",", dictionary[key], file=wr)
+                print(key, ",", dictionary[key], file=wr)
 
     def combiner(self):
 
@@ -209,9 +215,11 @@ if __name__ == '__main__':
     if args["keep"]:
         pass
     else:
-        subprocess.run(["rm", domain.split(".")[0] + "_joined_list.txt"])
-        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + ".xml"])
-        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + ".html"])
-        subprocess.run(["rm", "theharvester_" + domain.split(".")[0] + "_parsed.txt"])
-        subprocess.run(["rm", os.path.dirname(os.getcwd()) + "/sublist3r_" + domain.split(".")[0] + ".txt"])
-        subprocess.run(["sudo", "rm", os.path.dirname(os.getcwd()) + "/recon-ng_" + domain.split(".")[0] + ".txt"])
+        # working directory is parent directory. To delete files in theHarvester,
+        # go in subdirectory
+        subprocess.run(["rm", os.getcwd() + "/theHarvester/" + domain.split(".")[0] + "_joined_list.txt"])
+        subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + ".xml"])
+        subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + ".html"])
+        subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + "_parsed.txt"])
+        subprocess.run(["rm", os.getcwd() + "/sublist3r_" + domain.split(".")[0] + ".txt"])
+        subprocess.run(["sudo", "rm", os.getcwd() + "/recon-ng_" + domain.split(".")[0] + ".txt"])
