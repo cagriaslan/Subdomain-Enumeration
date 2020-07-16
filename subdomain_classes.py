@@ -55,8 +55,8 @@ class recon_ng:
         #subprocess.run(["recon-cli", "-w", self.target_domain.split(".")[0]])
         '''
 
-        if args["install"]:
-            subprocess.run(["recon-cli", "-C", "\"marketplace install all\""])
+        if args["install"] is not None:
+            os.system("recon-cli -C \" marketplace install all\" ")
         else:
             pass
 
@@ -75,7 +75,7 @@ class recon_ng:
                             0] + ".txt",
                         "-c", "options set TABLE hosts", "-x"])
 
-        # db delete hosts 0 - 1000
+        # db delete hosts 0 - 1000 / Deletes domains from hosts table
         subprocess.run(["recon-cli", "-C", "db delete hosts 0 - 1000 ", "-x"])
 
         '''
@@ -89,13 +89,14 @@ class recon_ng:
 
         return output_list
 
-
 class the_harvester:
     def __init__(self, target_domain):
         self.target_domain = target_domain
 
     def the_harvester_parser(self, input_file, output_file):
-        """Accepts the output produced by theHarvester in xml format and then extracts subdomains and returns them as a list"""
+        """Accepts the output produced by theHarvester in xml format
+        and then extracts subdomains and returns them as a list """
+
         parser = etree.XMLParser(recover=True, encoding="UTF-8")
         tree = etree.parse(input_file, parser=parser)
         root = tree.getroot()
@@ -166,7 +167,6 @@ class MergeFinalize:
             joined = set(joined)
             for sub_dom in joined:
                 wp.write("{}\n".format(sub_dom))
-            # return joined
             self.subdomain_list = joined
 
     def domain_ip_dict(self):
@@ -197,6 +197,7 @@ class MergeFinalize:
 if __name__ == '__main__':
     domain = args["domain"]
     output = args["output"]
+
     merger = MergeFinalize(domain, output)
     merger.combiner()
 
