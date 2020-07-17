@@ -132,6 +132,8 @@ class the_harvester:
 
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
                                                "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
+
+            os.chdir('..')
             return parsed
         else:
             os.system("git clone https://github.com/laramies/theHarvester.git")
@@ -145,8 +147,9 @@ class the_harvester:
                  self.target_domain.split(".")[0]], check=True)
             parsed = self.the_harvester_parser("theharvester_" + self.target_domain.split(".")[0] + ".xml",
                                                "theharvester_" + self.target_domain.split(".")[0] + "_parsed.txt")
-            return parsed
 
+            os.chdir('..')
+            return parsed
 
 class MergeFinalize:
     def __init__(self, target_domain, output_file):
@@ -191,8 +194,6 @@ class MergeFinalize:
         """ Last working directory was theHarvester. Go to parent directory
             with '..'. So program is able to write output.csv to main directory. """
 
-        os.chdir('..')
-
         with open(result_path + ".csv", "w") as wr:
             for key in dictionary.keys():
                 print(key, ",", dictionary[key], file=wr)
@@ -217,7 +218,7 @@ if __name__ == '__main__':
     else:
         # working directory is parent directory. To delete files in theHarvester,
         # go in subdirectory
-        subprocess.run(["rm", os.getcwd() + "/theHarvester/" + domain.split(".")[0] + "_joined_list.txt"])
+        subprocess.run(["rm", os.getcwd() + "/" + domain.split(".")[0] + "_joined_list.txt"])
         subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + ".xml"])
         subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + ".html"])
         subprocess.run(["rm", os.getcwd() + "/theHarvester/theharvester_" + domain.split(".")[0] + "_parsed.txt"])
