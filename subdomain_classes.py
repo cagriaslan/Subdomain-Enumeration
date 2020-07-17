@@ -151,7 +151,6 @@ class the_harvester:
             os.chdir('..')
             return parsed
 
-
 class MergeFinalize:
     def __init__(self, target_domain, output_file):
         self.target_domain = target_domain
