@@ -151,6 +151,7 @@ class the_harvester:
             os.chdir('..')
             return parsed
 
+
 class MergeFinalize:
     def __init__(self, target_domain, output_file):
         self.target_domain = target_domain
@@ -177,8 +178,8 @@ class MergeFinalize:
             self.subdomain_list = joined
 
     def domain_ip_dict(self):
-        keys = ['domain', 'ip']
-        dictionary = {key: None for key in keys}
+
+        dictionary = {}
         for domain in self.subdomain_list:
             try:
                 ip = socket.gethostbyname(domain.strip())
@@ -195,8 +196,8 @@ class MergeFinalize:
             with '..'. So program is able to write output.csv to main directory. """
 
         with open(result_path + ".csv", "w") as wr:
-            for key in dictionary.keys():
-                print(key, ",", dictionary[key], file=wr)
+            for key, value in dictionary.items():
+                print(key, ",", value, file=wr)
 
     def combiner(self):
 
